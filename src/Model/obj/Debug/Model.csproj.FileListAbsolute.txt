@@ -1,6 +1,0 @@
-C:\Workspaces\linker\src\Model\bin\Debug\Linker.Model.dll
-C:\Workspaces\linker\src\Model\bin\Debug\Linker.Model.pdb
-C:\Workspaces\linker\src\Model\obj\Debug\Model.csprojAssemblyReference.cache
-C:\Workspaces\linker\src\Model\obj\Debug\Model.csproj.CoreCompileInputs.cache
-C:\Workspaces\linker\src\Model\obj\Debug\Linker.Model.dll
-C:\Workspaces\linker\src\Model\obj\Debug\Linker.Model.pdb
