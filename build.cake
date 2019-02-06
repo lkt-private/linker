@@ -5,7 +5,7 @@
 
 #load build/paths.cake
 
-var target = Argument("target", "Build");
+var target = Argument("target", "Test");
 var configuration = Argument("Configuration", "Release");
 var codeCoverageReportPath = Argument<FilePath>("CodeCoverageReportPath", "coverage.zip");
 
