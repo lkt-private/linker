@@ -8,8 +8,10 @@
 var target = Argument("target", "Test");
 var configuration = Argument("Configuration", "Release");
 var codeCoverageReportPath = Argument<FilePath>("CodeCoverageReportPath", "coverage.zip");
+var packageOutputPath = Argument<DirectoryPath>("PackageOutputPath", "packages");
 
 var packageVersion = "0.1.0";
+var packagePath = File("Linker.zip").Path;
 
 Task("Restore")
 	.Does(()=> {
@@ -67,6 +69,42 @@ Task("Version")
 				UpdateAssemblyInfo = true
 			});
 		}
+	});
+
+Task("Clean-Packages")
+	.Does(()=> {
+        if (DirectoryExists(packageOutputPath)) {
+            DeleteDirectory(packageOutputPath, new DeleteDirectorySettings { Recursive = true, Force = true });
+        }
+	});
+
+Task("Package-NuGet")
+	.IsDependentOn("Test")
+	.IsDependentOn("Version")
+	.IsDependentOn("Clean-Packages")
+	.Does(()=> {
+		EnsureDirectoryExists(packageOutputPath);
+
+		NuGetPack(Paths.WebNuspecFile,
+			new NuGetPackSettings {
+				Version = packageVersion,
+				OutputDirectory = packageOutputPath,
+				NoPackageAnalysis = true
+			});
+	});
+
+Task("Package-WebDeploy")
+	.IsDependentOn("Test")
+	.IsDependentOn("Version")
+	.IsDependentOn("Clean-Packages")
+	.Does(()=> {
+		EnsureDirectoryExists(packageOutputPath);
+		packagePath = Combine(MakeAbsolute(packageOutputPath), $"Linker.{packageVersion}.zip");
+
+		MSBuild(Paths.WebProjectFile,
+			settings => settings.SetConfiguration(configuration)
+								.WithTarget("Package")
+								.WithProperty("PackageLocation", packagePath.FullPath));
 	});
 
 RunTarget(target);

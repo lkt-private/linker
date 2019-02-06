@@ -10,5 +10,8 @@
   <files>
       <file src="bin\**\*" target="bin" />
       <file src="Web*.config" target="." />
+      <file src="Images\**\*" target="Images" />
+      <file src="Style\**\*" target="Style" />
+      <file src="*.html" target="." />
   </files>
 </package>
