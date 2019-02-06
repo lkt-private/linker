@@ -2,8 +2,10 @@
 #tool nuget:?package=OpenCover&version=4.6.519
 #tool nuget:?package=ReportGenerator&version=2.5.8
 #tool nuget:?package=GitVersion.CommandLine&version=3.6.5
+#tool nuget:?package=OctopusTools&version=4.21.0
 
 #load build/paths.cake
+#load build/urls.cake
 
 var target = Argument("target", "Test");
 var configuration = Argument("Configuration", "Release");
@@ -105,6 +107,27 @@ Task("Package-WebDeploy")
 			settings => settings.SetConfiguration(configuration)
 								.WithTarget("Package")
 								.WithProperty("PackageLocation", packagePath.FullPath));
+	});
+
+Task("Deploy-OctopusDeploy")
+	.IsDependentOn("Package-NuGet")
+	.Does(()=> {
+		OctoPush(
+			Urls.OctopusServerUrl,
+			EnvironmentVariable("OctopusApiKey"),
+			GetFiles($"{packageOutputPath}/*.nupkg"),
+			new OctopusPushSettings { ReplaceExisting = true });
+
+		OctoCreateRelease(
+			"Linker",
+			new CreateReleaseSettings { 
+				Server = Urls.OctopusServerUrl,
+				ApiKey = EnvironmentVariable("OctopusApiKey"),
+				ReleaseNumber = packageVersion,
+				DefaultPackageVersion = packageVersion,
+				DeployTo = "Test",
+				WaitForDeployment = true
+			});
 	});
 
 RunTarget(target);
