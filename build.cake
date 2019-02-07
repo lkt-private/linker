@@ -4,7 +4,7 @@
 #tool nuget:?package=GitVersion.CommandLine&version=3.6.5
 #tool nuget:?package=OctopusTools&version=4.21.0
 
-#addin nuget:?package=Cake.WebDeploy&version=0.2.4
+#addin nuget:?package=Cake.WebDeploy&version=0.3.3
 
 #load build/paths.cake
 #load build/urls.cake
@@ -30,8 +30,9 @@ Task("Build")
 		  settings => settings.SetConfiguration(configuration).WithTarget("Build"));
 	});
 
-Task("Test")
+Task("Test-OpenCover")
 	.IsDependentOn("Build")
+	.WithCriteria(() => BuildSystem.IsLocalBuild)
 	.Does(()=> {
 		OpenCover(
 		  tool => tool.XUnit2(
@@ -45,6 +46,29 @@ Task("Test")
 			.WithFilter("-[Linker.*Tests*]*")
 		);
 	});
+
+Task("Test-DotCover")
+	.IsDependentOn("Build")
+	.WithCriteria(() => BuildSystem.IsRunningOnTeamCity)
+	.Does(()=> {
+		DotCoverCover(
+		  tool => tool.XUnit2(
+			$"**/bin/{configuration}/*Tests.dll",
+			new XUnit2Settings {
+				ShadowCopy = false
+			}),
+		  Paths.CodeCoverageResultFile,
+		  new DotCoverCoverSettings()
+			.WithFilter("+[Linker.*]*")
+			.WithFilter("-[Linker.*Tests*]*")
+		);
+		
+		BuildSystem.TeamCity.ImportDotCoverCoverage(MakeAbsolute(Paths.CodeCoverageResultFile));
+	});
+
+Task("Test")
+	.IsDependentOn("Test-OpenCover")
+	.IsDependentOn("Test-DotCover");
 
 Task("Report-Coverage")	
 	.IsDependentOn("Test")
@@ -134,15 +158,23 @@ Task("Deploy-OctopusDeploy")
 
 Task("Deploy-WebDeploy")
 	.IsDependentOn("Package-WebDeploy")
+	.IsDependentOn("Publish-Artifacts")
 	.Does(()=> {
 		DeployWebsite(new DeploySettings()
-			.SetPublishUrl(Urls.WbDeployPublishUrl)
+			.SetPublishUrl(Urls.WebDeployPublishUrl)
 			.FromSourcePath(packagePath.FullPath)
 			.ToDestinationPath("site/wwwroot/Linker")
 			.UseSiteName("Linker-Demo")
 			.AddParameter("IIS Web Application Name", "Linker-Demo")
 			.UseUsername(EnvironmentVariable("DeploymentUser"))
 			.UsePassword(EnvironmentVariable("DeploymentPassword")));
+	});
+
+Task("Publish-Artifacts")
+	.IsDependentOn("Package-WebDeploy")
+	.WithCriteria(() => BuildSystem.IsRunningOnTeamCity)
+	.Does(()=> {
+		BuildSystem.TeamCity.PublishArtifacts(packagePath.FullPath);
 	});
 
 RunTarget(target);

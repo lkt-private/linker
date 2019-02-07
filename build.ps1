@@ -44,6 +44,7 @@ Param(
     [string]$Verbosity,
     [switch]$ShowDescription,
     [Alias("WhatIf", "Noop")]
+    [switch]$DebugMode,
     [switch]$DryRun,
     [switch]$SkipToolPackageRestore,
     [Parameter(Position=0,Mandatory=$false,ValueFromRemainingArguments=$true)]
@@ -234,6 +235,7 @@ if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
 if ($ShowDescription) { $cakeArguments += "-showdescription" }
 if ($DryRun) { $cakeArguments += "-dryrun" }
+if ($DebugMode) { $cakeArguments += "-debug" }
 $cakeArguments += $ScriptArgs
 
 # Start Cake
