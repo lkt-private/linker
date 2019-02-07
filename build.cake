@@ -4,6 +4,8 @@
 #tool nuget:?package=GitVersion.CommandLine&version=3.6.5
 #tool nuget:?package=OctopusTools&version=4.21.0
 
+#addin nuget:?package=Cake.WebDeploy&version=0.2.4
+
 #load build/paths.cake
 #load build/urls.cake
 
@@ -128,6 +130,19 @@ Task("Deploy-OctopusDeploy")
 				DeployTo = "Test",
 				WaitForDeployment = true
 			});
+	});
+
+Task("Deploy-WebDeploy")
+	.IsDependentOn("Package-WebDeploy")
+	.Does(()=> {
+		DeployWebsite(new DeploySettings()
+			.SetPublishUrl(Urls.WbDeployPublishUrl)
+			.FromSourcePath(packagePath.FullPath)
+			.ToDestinationPath("site/wwwroot/Linker")
+			.UseSiteName("Linker-Demo")
+			.AddParameter("IIS Web Application Name", "Linker-Demo")
+			.UseUsername(EnvironmentVariable("DeploymentUser"))
+			.UsePassword(EnvironmentVariable("DeploymentPassword")));
 	});
 
 RunTarget(target);
