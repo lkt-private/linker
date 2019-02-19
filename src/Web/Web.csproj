@@ -102,6 +102,7 @@
     <Content Include="packages.config" />
     <Content Include="Style\main.css" />
     <Content Include="Web.nuspec" />
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
